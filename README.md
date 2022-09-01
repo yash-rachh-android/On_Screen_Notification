@@ -17,5 +17,5 @@ allprojects {
 > Step 2. Add the dependency 
 ```gradle
 dependencies {
-	        implementation 'com.github.yash-rachh-android:On_Screen_Notification:Tag'
+	        implementation 'com.github.yash-rachh-android:On_Screen_Notification:1.0.0'
 	}
