@@ -1,11 +1,15 @@
 package com.example.screen_notification
 
 import android.content.Context
+import android.graphics.Color
+import android.graphics.Typeface
+import android.graphics.drawable.Drawable
 import android.os.Handler
 import android.util.AttributeSet
 import android.view.View
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import android.widget.TextView
@@ -13,11 +17,8 @@ import android.widget.TextView
 
 open class NotificationView : RelativeLayout {
 
-    /*var notificationRecycler: RecyclerView? = null*/
-    var notificationQueList = ArrayList<String>()
-
-    /*var notificationAdapter = NotificationAdapter(mutableListOf())*/
     var layout: LinearLayout? = null
+    var notificationList = ArrayList<NotificationModel>()
 
     constructor(context: Context) : super(context) {}
 
@@ -31,17 +32,6 @@ open class NotificationView : RelativeLayout {
     constructor(context: Context, attrs: AttributeSet) : this(context, attrs, 0) {}
 
     open fun initComponents() {
-        /* notificationRecycler = RecyclerView(context)
-         val params = RecyclerView.LayoutParams(
-             RecyclerView.LayoutParams.MATCH_PARENT,
-             RecyclerView.LayoutParams.WRAP_CONTENT
-         )
-         notificationRecycler?.layoutParams = params
-         val layoutManager = LinearLayoutManager(context)
-         layoutManager.orientation = LinearLayoutManager.HORIZONTAL
-         notificationRecycler?.layoutManager = layoutManager
-         notificationRecycler?.adapter = notificationAdapter
-         this.addView(notificationRecycler)*/
         layout = View.inflate(context, R.layout.item_notification, null) as LinearLayout?
         val params = LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,
@@ -53,22 +43,27 @@ open class NotificationView : RelativeLayout {
         this.addView(layout)
     }
 
-    fun loadComponents(userList: ArrayList<String>) {
-        notificationQueList.addAll(userList)
-        /*notificationAdapter.updateList(notificationQueList)*/
-    }
-
-    fun clearQueList() {
-        notificationQueList.clear()
-        /* notificationAdapter.updateList(notificationQueList)*/
-    }
-
-    open fun setNotificationView(title: String) {
+    open fun setNotificationText(title: String) {
         val tvTitle: TextView = layout!!.findViewById(R.id.tvNotifyText)
         tvTitle.text = title
     }
 
     open fun notifyView() {
+        if(notificationList.isNotEmpty()){
+            val tvTitle: TextView = layout!!.findViewById(R.id.tvNotifyText)
+            tvTitle.text = notificationList[0].title
+            if(notificationList[0].icon != null){
+                val imgNotification: ImageView = layout!!.findViewById(R.id.imgNotify)
+                imgNotification.visibility = View.VISIBLE
+                imgNotification.setImageDrawable(notificationList[0].icon)
+            }
+            slideInAnimation(true)
+        }else{
+            slideInAnimation(false)
+        }
+    }
+
+    private fun slideInAnimation(fromQue: Boolean) {
         val slideInAnimation: Animation =
             AnimationUtils.loadAnimation(context, R.anim.right_to_left)
         slideInAnimation.startOffset = 0
@@ -81,7 +76,7 @@ open class NotificationView : RelativeLayout {
 
             override fun onAnimationEnd(p0: Animation?) {
                 Handler().postDelayed({
-                    slideOutAnimation()
+                    slideOutAnimation(fromQue)
                 }, 1000)
             }
 
@@ -92,7 +87,7 @@ open class NotificationView : RelativeLayout {
         })
     }
 
-    private fun slideOutAnimation() {
+    private fun slideOutAnimation(fromQue: Boolean) {
         val slideOutAnimation: Animation =
             AnimationUtils.loadAnimation(context, R.anim.slide_out_from_left)
         slideOutAnimation.startOffset = 0
@@ -103,7 +98,23 @@ open class NotificationView : RelativeLayout {
             }
 
             override fun onAnimationEnd(p0: Animation?) {
-                layout!!.visibility = View.GONE
+                if(fromQue){
+                    removeNotificationFromQue(0)
+                    if(notificationList.isNotEmpty()){
+                        val tvTitle: TextView = layout!!.findViewById(R.id.tvNotifyText)
+                        tvTitle.text = notificationList[0].title
+                        if(notificationList[0].icon != null){
+                            val imgNotification: ImageView = layout!!.findViewById(R.id.imgNotify)
+                            imgNotification.visibility = View.VISIBLE
+                            imgNotification.setImageDrawable(notificationList[0].icon)
+                        }
+                        slideInAnimation(true)
+                    }else{
+                        layout!!.visibility = View.GONE
+                    }
+                }else {
+                    layout!!.visibility = View.GONE
+                }
             }
 
             override fun onAnimationRepeat(p0: Animation?) {
@@ -111,5 +122,51 @@ open class NotificationView : RelativeLayout {
             }
 
         })
+    }
+
+    open fun setBackgroundColor(color : String){
+        layout!!.setBackgroundColor(Color.parseColor(color))
+    }
+
+    open fun setBackgroundResource(drawable: Drawable?){
+        layout!!.background = drawable
+    }
+
+    open fun setNotificationIcon(drawable: Drawable?){
+        val imgNotification: ImageView = layout!!.findViewById(R.id.imgNotify)
+        imgNotification.visibility = View.VISIBLE
+        imgNotification.setImageDrawable(drawable)
+    }
+
+    open fun setTextColor(color: String){
+        val tvTitle: TextView = layout!!.findViewById(R.id.tvNotifyText)
+        tvTitle.setTextColor(Color.parseColor(color))
+    }
+
+    open fun setTextSize(size: Float){
+        val tvTitle: TextView = layout!!.findViewById(R.id.tvNotifyText)
+        tvTitle.textSize = size
+    }
+
+    open fun setTextBold(isBold: Boolean){
+        val tvTitle: TextView = layout!!.findViewById(R.id.tvNotifyText)
+        if(isBold){
+            tvTitle.setTypeface(tvTitle.typeface, Typeface.BOLD)
+        }
+    }
+
+    open fun setTextItalic(isBold: Boolean){
+        val tvTitle: TextView = layout!!.findViewById(R.id.tvNotifyText)
+        if(isBold){
+            tvTitle.setTypeface(tvTitle.typeface, Typeface.ITALIC)
+        }
+    }
+
+    open fun addNotificationToQue(notification: NotificationModel){
+        notificationList.add(notification)
+    }
+
+    private fun removeNotificationFromQue(position: Int){
+        notificationList.removeAt(position)
     }
 }
